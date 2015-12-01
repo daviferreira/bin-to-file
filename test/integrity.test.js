@@ -1,9 +1,11 @@
 'use strict';
 /*global describe, it, beforeEach, after */
 var w3cjs = require('w3cjs');
+var assert = require('assert');
 var toFile = require('../');
 var fs = require('fs');
 var path = require('path');
+var cheerio = require('cheerio');
 
 describe('integrity', function () {
   var filename = path.join(__dirname, 'fixtures', 'tmp-' + (Math.random() * 1000 | 0) + '.html');
@@ -11,10 +13,6 @@ describe('integrity', function () {
 
   beforeEach(function () {
     html = fs.readFileSync(path.join(__dirname, 'fixtures', 'simple.html'), 'utf8');
-  });
-
-  after(function () {
-    fs.unlinkSync(filename);
   });
 
   it('should create valid document with just HTML, CSS & JS', function (done) {
@@ -34,6 +32,17 @@ describe('integrity', function () {
         done();
       }
     });
+
+    fs.unlinkSync(filename);
+  });
+
+  it('should place meta tags inside head tag', function () {
+    var meta = '<meta name="robots" content="noindex">';
+    var file = toFile({ html: html, javascript: null, css: null, meta: meta });
+
+    var $ = cheerio.load(file);
+
+    assert.equal($('head').find('> meta').length, 2);
   });
 
 });
